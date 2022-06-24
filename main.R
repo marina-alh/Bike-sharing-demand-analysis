@@ -110,7 +110,7 @@ forecast_datetime <- c()
 # Season column
 # Note that for season, you can hard code a season value from levels Spring, Summer, Autumn, and Winter based on your current month.
 season <- c()
-
+cities <- c("Seoul", "Washington, D.C.", "Paris", "Suzhou")
 
 # Get forecast data for a given city list
 get_weather_forecaset_by_cities <- function(city_names){
@@ -121,14 +121,22 @@ get_weather_forecaset_by_cities <- function(city_names){
                 # Create query parameters
                 forecast_query <- list(q = city_name, appid = "e4614d8005296e56cff6675eefd7f6df", units="metric")
                 # Make HTTP GET call for the given city
-                
+                response <- GET(forecast_url, query=forecast_query)
                 # Note that the 5-day forecast JSON result is a list of lists. You can print the reponse to check the results
-                #results <- json_list$list
-                
+                # results <- json_list$list
+                json_result <- content(response, as="parsed")
                 # Loop the json result
-                for(result in results) {
+                for(result in json_result) {
                         city <- c(city, city_name)
-                        
+                        weather <- c(weather,json_result$weather[[1]]$main)
+                        temp <- c(temp, json_result$main$temp)
+                        temp_min <- c(temp_min, json_result$main$temp_min)
+                        temp_max <- c(temp_max, json_result$main$temp_max)
+                        pressure <- c(pressure, json_result$main$pressure)
+                        humidity <- c(humidity, json_result$main$humidity)
+                        wind_speed <- c(wind_speed, json_result$wind$speed)
+                        wind_deg <- c(wind_deg, json_result$wind$deg)
+                        forecast_datetime <- c(forecast_datetime, as.Date.POSIXct(json_result$dt))
                 }
                 
                 # Add the R Lists into a data frame
@@ -138,3 +146,5 @@ get_weather_forecaset_by_cities <- function(city_names){
         return(df)
         
 }
+
+cities_weather_df <- get_weather_forecaset_by_cities(cities)
