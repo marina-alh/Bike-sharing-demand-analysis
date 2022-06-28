@@ -178,3 +178,111 @@ download.file(url, destfile = "data\\raw_worldcities.csv")
 url <- "https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMDeveloperSkillsNetwork-RP0321EN-SkillsNetwork/labs/datasets/raw_seoul_bike_sharing.csv"
 # download the file
 download.file(url, destfile = "data\\raw_seoul_bike_sharing.csv")
+
+
+#+++++++++++++++++++++++++ DATA WRANGLING +++++++++++++++++++++++++++
+
+
+ds_list <- c('raw_bike_sharing_systems.csv', 'raw_seoul_bike_sharing.csv', 'raw_cities_weather_forecast.csv', 'raw_worldcities.csv')
+
+foo <- function(dataset_list){
+        
+        
+        for (dataset_name in dataset_list){
+        
+        # Read dataset
+        dataset <- read_csv(paste('data\\',dataset_name,sep=''))
+        
+        # Standardized its columns:
+        # Convert all column names to uppercase
+        
+        names(dataset) = toupper(names(dataset))
+        
+        
+        # Replace any white space separators by underscores, using the str_replace_all function
+        str_replace_all(names(dataset), ' ', '_')
+        
+        # Save the dataset 
+        write.csv(dataset,paste('data\\',dataset_name,sep=''), row.names=FALSE)
+        }
+
+}
+
+# debug(foo)
+
+foo(ds_list)
+
+# undebug(foo)
+
+# First load the dataset
+bike_sharing_df <- read_csv("data\\raw_bike_sharing_systems.csv")
+
+
+# In this project, let's only focus on processing the following revelant columns (feel free to process the other columns for more practice):
+# 
+#     COUNTRY: Country name
+#     CITY: City name
+#     SYSTEM: Bike-sharing system name
+#     BICYCLES: Total number of bikes in the system
+
+
+
+# Select the four columns
+sub_bike_sharing_df <- bike_sharing_df %>% select(COUNTRY, CITY, SYSTEM, BICYCLES)
+
+
+sub_bike_sharing_df %>% 
+        summarize_all(class) %>%
+        gather(variable, class)
+
+# grepl searches a string for non-digital characters, and returns TRUE or FALSE
+# if it finds any non-digital characters, then the bicyle column is not purely numeric
+find_character <- function(strings) grepl("[^0-9]", strings)
+
+sub_bike_sharing_df %>% 
+        select(BICYCLES) %>% 
+        filter(find_character(BICYCLES)) %>%
+        slice(0:10)
+
+# Define a 'reference link' character class, 
+# `[A-z0-9]` means at least one character 
+# `\\[` and `\\]` means the character is wrapped by [], such as for [12] or [abc]
+ref_pattern <- "\\[[A-z0-9]+\\]"
+find_reference_pattern <- function(strings) grepl(ref_pattern, strings)
+
+# Check whether the COUNTRY column has any reference links
+sub_bike_sharing_df %>% 
+        select(COUNTRY) %>% 
+        filter(find_reference_pattern(COUNTRY)) %>%
+        slice(0:10)
+# Check whether the CITY column has any reference links
+sub_bike_sharing_df %>% 
+        select(CITY) %>% 
+        filter(find_reference_pattern(CITY)) %>%
+        slice(0:10)
+
+# Check whether the System column has any reference links
+sub_bike_sharing_df %>% 
+        select(SYSTEM) %>% 
+        filter(find_reference_pattern(SYSTEM)) %>%
+        slice(0:10)
+
+# remove reference link
+remove_ref <- function(strings) {
+        ref_pattern <- "\\[[A-z0-9]+\\]"
+        grepl(ref_pattern, strings)
+        # Replace all matched substrings with a white space using str_replace_all()
+        str_replace_all(strings, ref_pattern, '')
+        
+        # Trim the reslt if you want
+        
+        # return(result)
+        
+}
+
+
+debug(remove_ref)
+
+
+remove_ref(sub_bike_sharing_df$SYSTEM)
+
