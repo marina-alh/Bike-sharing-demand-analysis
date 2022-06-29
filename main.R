@@ -215,7 +215,7 @@ foo(ds_list)
 # undebug(foo)
 
 # First load the dataset
-bike_sharing_df <- read_csv("data\\raw_bike_sharing_systems.csv")
+bike_sharing_df <- read.csv("data\\raw_bike_sharing_systems.csv")
 
 
 # In this project, let's only focus on processing the following revelant columns (feel free to process the other columns for more practice):
@@ -270,19 +270,56 @@ sub_bike_sharing_df %>%
 # remove reference link
 remove_ref <- function(strings) {
         ref_pattern <- "\\[[A-z0-9]+\\]"
-        grepl(ref_pattern, strings)
-        # Replace all matched substrings with a white space using str_replace_all()
-        str_replace_all(strings, ref_pattern, '')
+        # Replace all matched substrings with a empty space using str_replace_all()
+        result = str_replace_all(strings, ref_pattern, '')
         
         # Trim the reslt if you want
         
-        # return(result)
+        return(result)
         
 }
 
 
 debug(remove_ref)
+undebug(remove_ref)
 
 
-remove_ref(sub_bike_sharing_df$SYSTEM)
+sub_bike_sharing_df  <- sub_bike_sharing_df %>% mutate(SYSTEM=remove_ref(SYSTEM), 
+                               CITY=remove_ref(CITY),
+                               BICYCLES=remove_ref(BICYCLES))
+
+sub_bike_sharing_df %>% 
+        select(CITY, SYSTEM, BICYCLES) %>% 
+        filter(find_reference_pattern(CITY) | find_reference_pattern(SYSTEM) | find_reference_pattern(BICYCLES))
+
+
+# Extract the first number
+extract_num <- function(columns){
+        # Define a digital pattern
+        digitals_pattern <- "\\d+"
+        # Find the first match using str_extract
+        
+         result = str_extract(columns,digitals_pattern)
+        
+        # Convert the result to numeric using the as.numeric() function
+         
+         result = as.numeric(result)
+         
+         return(result)
+         
+         
+}
+
+debug(extract_num)
+undebug(extract_num)
+
+
+sub_bike_sharing_df  <- sub_bike_sharing_df %>% mutate(BICYCLES=extract_num(BICYCLES))
+
+summary(sub_bike_sharing_df$BICYCLES)
+
+
+# Write dataset to `bike_sharing_systems.csv`
+
+write.csv(sub_bike_sharing_df,paste('data\\',"bike_sharing_systems.csv",sep=''), row.names=FALSE)
 
