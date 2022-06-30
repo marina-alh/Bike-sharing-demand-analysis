@@ -314,12 +314,66 @@ debug(extract_num)
 undebug(extract_num)
 
 
+
+
 sub_bike_sharing_df  <- sub_bike_sharing_df %>% mutate(BICYCLES=extract_num(BICYCLES))
 
 summary(sub_bike_sharing_df$BICYCLES)
 
+result = str_extract(columns,digitals_pattern)
 
 # Write dataset to `bike_sharing_systems.csv`
 
 write.csv(sub_bike_sharing_df,paste('data\\',"bike_sharing_systems.csv",sep=''), row.names=FALSE)
 
+
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++##
+
+bike_sharing_df <- read.csv("data//raw_seoul_bike_sharing.csv")
+
+summary(bike_sharing_df)
+
+
+# Drop rows with `RENTED_BIKE_COUNT` column == NA
+# we normally can not allow missing values for the response variable, so missing values for 
+# response variable must be either dropped or imputed properly.
+# We can see that `RENTED_BIKE_COUNT` only has about 3% missing values (295 / 8760).
+
+bike_sharing_df = bike_sharing_df %>% drop_na(RENTED_BIKE_COUNT)
+
+
+# Print the dataset dimension again after those rows are dropped
+
+dim(bike_sharing_df)
+
+#  We could simply remove the rows but it's better to impute them because 
+# TEMPERATURE should be relatively easy and reliable to estimate statistically.
+
+bike_sharing_df %>% 
+        filter(is.na(TEMPERATURE))
+
+bike_sharing_df = bike_sharing_df %>% 
+        filter(SEASONS == "Summer") %>%  #subsetting rows using column values
+        # select(TEMPERATURE) %>% # Subset columns using their names and types
+        mutate(TEMPERATURE = replace_na(TEMPERATURE, mean(TEMPERATURE, na.rm = TRUE)))
+
+
+
+# Print the summary of the dataset again to make sure no missing values in all columns
+
+summary(bike_sharing_df)
+
+# Save the dataset as `seoul_bike_sharing.csv`
+
+write.csv(bike_sharing_df,paste('data\\',"seoul_bike_sharing.csv",sep=''), row.names=FALSE)
+
+
+
+#++++++++++ Create indicator (dummy) variables for categorical variables ++++++++++++
+
+
+# Using mutate() function to convert HOUR column into character type
+
+sub_bike_sharing_df = sub_bike_sharing_df %>% 
+        mutate(HOUR = as.character(HOUR))
