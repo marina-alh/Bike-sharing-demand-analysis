@@ -353,10 +353,14 @@ dim(bike_sharing_df)
 bike_sharing_df %>% 
         filter(is.na(TEMPERATURE))
 
-bike_sharing_df = bike_sharing_df %>% 
+summer_avg_temp = bike_sharing_df %>% 
         filter(SEASONS == "Summer") %>%  #subsetting rows using column values
-        # select(TEMPERATURE) %>% # Subset columns using their names and types
-        mutate(TEMPERATURE = replace_na(TEMPERATURE, mean(TEMPERATURE, na.rm = TRUE)))
+        select(TEMPERATURE)  # Subset columns using their names and types
+        
+summer_avg_temp = mean(summer_avg_temp$TEMPERATURE, na.rm = TRUE)
+        
+bike_sharing_df = bike_sharing_df %>% 
+        mutate(TEMPERATURE = replace_na(TEMPERATURE,summer_avg_temp))
 
 
 
@@ -375,5 +379,39 @@ write.csv(bike_sharing_df,paste('data\\',"seoul_bike_sharing.csv",sep=''), row.n
 
 # Using mutate() function to convert HOUR column into character type
 
-sub_bike_sharing_df = sub_bike_sharing_df %>% 
+bike_sharing_df = bike_sharing_df %>% 
         mutate(HOUR = as.character(HOUR))
+
+
+bike_sharing_df = bike_sharing_df %>% 
+        dummy_columns(c("SEASONS","HOLIDAY","HOUR"),remove_selected_columns = TRUE)
+
+
+# Save the dataset as `seoul_bike_sharing_converted.csv`
+
+write.csv(bike_sharing_df, "data\\seoul_bike_sharing_converted.csv", row.names=FALSE)
+
+
+
+# Use the `mutate()` function to apply min-max normalization on columns 
+
+
+l = c("RENTED_BIKE_COUNT", "TEMPERATURE", "HUMIDITY", "WIND_SPEED", "VISIBILITY", "DEW_POINT_TEMPERATURE", "SOLAR_RADIATION", "RAINFALL", "SNOWFALL")
+
+
+
+
+nMinMax = function(column){
+        
+        a = bike_sharing_df %>% 
+                mutate(column = (column-min(column))/(max(column)-min(column)))
+                # select(column)
+        return(a)
+        
+} 
+
+debug(nMinMax)
+undebug(nMinMax)
+
+a = sapply(l, nMinMax)
+a = as.data.frame(a)
