@@ -167,7 +167,7 @@ cities_weather_df <- get_weather_forecaset_by_cities(cities)
 
 write.csv(cities_weather_df, "data\\cities_weather_forecast.csv", row.names=FALSE)
 
-# Download several datasets
+
 
 # Download some general city information such as name and locations
 url <- "https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMDeveloperSkillsNetwork-RP0321EN-SkillsNetwork/labs/datasets/raw_worldcities.csv"
@@ -332,6 +332,7 @@ write.csv(sub_bike_sharing_df,paste('data\\',"bike_sharing_systems.csv",sep=''),
 
 bike_sharing_df <- read.csv("data//raw_seoul_bike_sharing.csv")
 
+
 summary(bike_sharing_df)
 
 
@@ -375,8 +376,9 @@ write.csv(bike_sharing_df,paste('data\\',"seoul_bike_sharing.csv",sep=''), row.n
 
 
 #++++++++++ Create indicator (dummy) variables for categorical variables ++++++++++++
+bike_sharing_df <- read.csv("data//seoul_bike_sharing.csv")
 
-
+require(fastDummies)
 # Using mutate() function to convert HOUR column into character type
 
 bike_sharing_df = bike_sharing_df %>% 
@@ -403,15 +405,48 @@ l = c("RENTED_BIKE_COUNT", "TEMPERATURE", "HUMIDITY", "WIND_SPEED", "VISIBILITY"
 
 nMinMax = function(column){
         
-        a = bike_sharing_df %>% 
-                mutate(column = (column-min(column))/(max(column)-min(column)))
-                # select(column)
+        a = (column - min(column)) / (max(column)-min(column))
+        
         return(a)
         
 } 
 
 debug(nMinMax)
-undebug(nMinMax)
 
-a = sapply(l, nMinMax)
-a = as.data.frame(a)
+
+
+seoul_bike_sharing_converted_normalized = as.data.frame(sapply(bike_sharing_df[2:10], nMinMax))
+
+
+seoul_bike_sharing_converted_normalized$DATE = bike_sharing_df$DATE
+
+df = seoul_bike_sharing_converted_normalized %>% 
+        select(c("DATE","RENTED_BIKE_COUNT", "TEMPERATURE", "HUMIDITY", "WIND_SPEED", "VISIBILITY", "DEW_POINT_TEMPERATURE", "SOLAR_RADIATION", "RAINFALL", "SNOWFALL"))
+
+
+df2 = bike_sharing_df[11:41]
+
+df3= cbind(df,df2)
+
+# undebug(nMinMax)
+ 
+summary(df3)
+ 
+write_csv(df3, "data\\seoul_bike_sharing_converted_normalized.csv")
+
+
+
+# Dataset list
+dataset_list <- c('seoul_bike_sharing.csv', 'seoul_bike_sharing_converted.csv', 'seoul_bike_sharing_converted_normalized.csv')
+
+for (dataset_name in dataset_list){
+        # Read dataset
+        dataset <- read.csv(paste('data\\',dataset_name,sep=''))
+        # Standardized its columns:
+        # Convert all columns names to uppercase
+        names(dataset) <- toupper(names(dataset))
+        # Replace any white space separators by underscore, using str_replace_all function
+        names(dataset) <- str_replace_all(names(dataset), " ", "_")
+        # Save the dataset back
+        write.csv(dataset, paste('data\\',dataset_name,sep=''), row.names=FALSE)
+}
