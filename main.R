@@ -450,3 +450,40 @@ for (dataset_name in dataset_list){
         # Save the dataset back
         write.csv(dataset, paste('data\\',dataset_name,sep=''), row.names=FALSE)
 }
+
+
+#Exploratory Data Analysis with tidyverse and ggplot2
+
+
+
+bike_sharing_df <- read.csv("data//seoul_bike_sharing.csv")
+
+
+
+bike_sharing_df = bike_sharing_df %>% 
+        mutate(DATE = as.Date(DATE, format = "%d/%m/%Y" ))
+
+bike_sharing_df = bike_sharing_df %>% 
+        mutate(HOUR = as.factor(HOUR), SEASONS = as.factor(SEASONS), 
+               HOLIDAY = as.factor(HOLIDAY), FUNCTIONING_DAY = as.factor(FUNCTIONING_DAY)) 
+str(bike_sharing_df)
+sum(is.na(bike_sharing_df))
+summary(bike_sharing_df)
+
+
+n_holidays = sum(bike_sharing_df$HOLIDAY == "Holiday")
+
+n_records = 8465
+
+perc_records =(n_holidays/n_records) * 100
+
+
+records = 365*24
+
+summary(bike_sharing_df)
+
+bike_sharing_df %>% 
+        group_by(SEASONS) %>% 
+        summarise(TOTAL_RAINFALL = sum(RAINFALL), TOTAL_SNOWFALL = sum(SNOWFALL))
+
+
