@@ -1,4 +1,6 @@
-# # Check if need to install rvest` library
+# library(tidyverse) 
+
+# Check if need to install rvest` library
 # require(rvest)
 # 
 # url <- "https://en.wikipedia.org/wiki/List_of_bicycle-sharing_systems"
@@ -482,8 +484,77 @@ records = 365*24
 
 summary(bike_sharing_df)
 
+
+# checking the total rainfall and snowfall
+
 bike_sharing_df %>% 
         group_by(SEASONS) %>% 
         summarise(TOTAL_RAINFALL = sum(RAINFALL), TOTAL_SNOWFALL = sum(SNOWFALL))
 
+# Scatter plot of RENTED BIKE COUNT  vs DATE
 
+
+p1 <- ggplot(bike_sharing_df, aes(x=DATE, y=RENTED_BIKE_COUNT, color=HOUR)) +
+        geom_point(alpha = 1/10) +
+        labs( x = "Date", y = "Rented bike count",
+              title = "Bike rent depending on the de day and time"
+              
+        )
+p1
+
+#Description: Peaks of bike rent mostly in the evenings of Summer and Autumn
+
+
+p2 <- ggplot(bike_sharing_df, aes(x = RENTED_BIKE_COUNT)) +
+        geom_histogram(aes(y=..density..),binwidth = 150,color = 1, fill = "white")+
+        geom_density(col = "red",lwd = 1.2,fill = 2, alpha = 0.25)+
+        labs( x = "Rented bike count", y = " ",
+              title = "Number of rents density curve"
+      
+        )
+        
+p2
+
+p3 <- ggplot(bike_sharing_df, aes(x=TEMPERATURE, y=RENTED_BIKE_COUNT, color=SEASONS)) +
+        geom_point(alpha = 1/10) +
+        labs( x = "Temperature in ºC", y = "Rented bike count",
+              title ="Seasonal bike rent"
+      )
+
+p3 # temperature has to be between 20 and 30 for max rents
+
+
+p4 <- ggplot(bike_sharing_df, aes(x=HOUR, y=RENTED_BIKE_COUNT, facets=SEASONS)) +
+        geom_boxplot()+  
+        facet_wrap(~ SEASONS, ncol = 2)+
+        labs( x = "Hour of the day", y = "Rented bike count",
+        title = "Daily bike rent by Season"
+        )
+p4
+
+
+aux = bike_sharing_df %>% 
+        group_by(DATE) %>% 
+        summarise(TOTAL_RAINFALL = sum(RAINFALL), TOTAL_SNOWFALL = sum(SNOWFALL),counts = n()) 
+   
+p5 <- ggplot(aux) +
+        geom_bar(aes(x = DATE, y = TOTAL_RAINFALL),stat = "identity", fill = "blue")+
+        geom_bar(aes(x = DATE, y = TOTAL_SNOWFALL),stat = "identity", fill = "red")+
+        labs( x = "date", y = "Rainfall/SnowFall",
+                 title = "Daily bike rent by Season")+
+        theme()
+p5
+
+sum(aux$TOTAL_SNOWFALL != 0)
+
+
+
+# HOURLY BIKE SHARING COUNT
+
+# model: weather predictor + date/time predictor = hourly bike count
+
+# STEP 1: Find importante model variables
+
+# STEP 2: apply polinomial model
+
+# STEP 3: Make prediction, judge quality and apply regularization if needed
