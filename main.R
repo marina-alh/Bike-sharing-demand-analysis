@@ -1,5 +1,6 @@
 # library(tidyverse) 
 
+
 # Check if need to install rvest` library
 # require(rvest)
 # 
@@ -400,12 +401,7 @@ write.csv(bike_sharing_df, "data\\seoul_bike_sharing_converted.csv", row.names=F
 # Use the `mutate()` function to apply min-max normalization on columns 
 
 
-l = c("RENTED_BIKE_COUNT", "TEMPERATURE", "HUMIDITY", "WIND_SPEED", "VISIBILITY", "DEW_POINT_TEMPERATURE", "SOLAR_RADIATION", "RAINFALL", "SNOWFALL")
-
-
-
-
-nMinMax = function(column){
+l = c("RENTED_BIKE_COUNT", "TEMPERATURE", "HUMIDITY", "WIND_SPEED", "VISIBILITY", "DEW_POINT_TEMPERATURE", "SOLAR_RADIATION", "RAINFALL", "SNOWFALL")nMinMax = function(column){
         
         a = (column - min(column)) / (max(column)-min(column))
         
@@ -540,9 +536,8 @@ aux = bike_sharing_df %>%
 p5 <- ggplot(aux) +
         geom_bar(aes(x = DATE, y = TOTAL_RAINFALL),stat = "identity", fill = "blue")+
         geom_bar(aes(x = DATE, y = TOTAL_SNOWFALL),stat = "identity", fill = "red")+
-        labs( x = "date", y = "Rainfall/SnowFall",
-                 title = "Daily bike rent by Season")+
-        theme()
+        labs( x = "date", y = "Rainfall/SnowFall (mm)",
+                 title = "Daily Rainfall/Snowfall")+
 p5
 
 sum(aux$TOTAL_SNOWFALL != 0)
@@ -551,10 +546,152 @@ sum(aux$TOTAL_SNOWFALL != 0)
 
 # HOURLY BIKE SHARING COUNT
 
-# model: weather predictor + date/time predictor = hourly bike count
+# Predict Hourly Rented Bike Count using Basic Linear Regression Models (90 mins):
+#         
+# TASK: Split data into training and testing data sets
 
-# STEP 1: Find importante model variables
+# The main data for this task is going to be the seoul_bike_sharing_converted_normalized.csv
 
-# STEP 2: apply polinomial model
+# loading the data
 
-# STEP 3: Make prediction, judge quality and apply regularization if needed
+bike_sharing_df <- read.csv("data\\seoul_bike_sharing_converted_normalized.csv")
+# bike_sharing_df <- read.csv("data\\seoul_bike_sharing_converted.csv")
+bike_sharing_df = as_tibble(bike_sharing_df)
+
+
+
+# discard DATE and FUNCTIONIN_DAY columns as they'll not be used
+
+bike_sharing_df <- bike_sharing_df %>% 
+        select(-DATE, -FUNCTIONING_DAY)
+
+# With seed 1234
+set.seed(1234)
+
+# prop = 3/4
+bike_sharing_df_split <- initial_split(bike_sharing_df, prop = 3/4)
+# train_data 
+train_df <- training(bike_sharing_df_split)
+# test_data
+test_df <- testing(bike_sharing_df_split)
+
+
+# TASK: Build a linear regression model using only the weather variables
+
+# TEMPERATURE - Temperature in Celsius
+# HUMIDITY - Unit is %
+# WIND_SPEED - Unit is m/s
+# VISIBILITY - Multiplied by 10m
+# DEW_POINT_TEMPERATURE - The temperature to which the air would have to cool down in order to reach saturation, unit is Celsius
+# SOLAR_RADIATION - MJ/m2
+# RAINFALL - mm
+# SNOWFALL - cm
+
+
+lm_model_weather <- linear_reg(mode = "regression", engine = "lm") 
+        
+
+# Fit the model called `lm_model_weather`
+# RENTED_BIKE_COUNT ~ TEMPERATURE + HUMIDITY + WIND_SPEED + VISIBILITY + DEW_POINT_TEMPERATURE + SOLAR_RADIATION + RAINFALL + SNOWFALL,  with the training data
+
+weather_var_rec <- recipe(RENTED_BIKE_COUNT ~ TEMPERATURE + HUMIDITY + WIND_SPEED + VISIBILITY + DEW_POINT_TEMPERATURE + SOLAR_RADIATION + RAINFALL + SNOWFALL,
+                   data = train_df)
+
+bike_rent_model_weather_wflow <- 
+        workflow() %>% 
+        add_model(lm_model_weather) %>% 
+        add_recipe(weather_var_rec)
+
+
+bike_rent_model_weather_fit <-
+        fit(bike_rent_model_weather_wflow,
+            data = train_df)
+
+
+# fit summary
+
+bike_rent_model_weather_fit$fit
+
+
+# TASK: Build a linear regression model using both weather and date/time variables
+
+
+lm_model_all <- linear_reg(mode = "regression", engine = "lm")
+
+all_var_rec <- recipe(RENTED_BIKE_COUNT ~.,
+                          data = train_df)
+
+
+bike_rent_model_all_wflow <- 
+        workflow() %>% 
+        add_model(lm_model_all) %>% 
+        add_recipe(all_var_rec)
+
+bike_rent_model_all_fit <-
+        fit(bike_rent_model_all_wflow,
+            data = train_df)
+
+bike_rent_model_all_fit$fit
+
+
+# TASK: Evaluate the models and identify important variables
+
+# metrics used to evaluate the models
+# 1. R^2 / R-squared
+# 2. Root Mean Squared Error (RMSE)
+
+# Use predict() function to generate test results for `lm_model_weather` and `lm_model_all`
+# and generate two test results dataframe with a truth column:
+
+# test_results_weather for lm_model_weather model
+
+test_results_weather <- predict(bike_rent_model_weather_fit, new_data = test_df) %>% 
+        mutate(truth = test_df$RENTED_BIKE_COUNT)
+
+
+
+# test_results_all for lm_model_all
+
+test_results_all <- predict(bike_rent_model_all_fit, new_data = test_df)%>% 
+        mutate(truth = test_df$RENTED_BIKE_COUNT)
+
+
+
+#Calculating metrics 
+rsq_weather <- rsq(test_results_weather, truth = test_results_weather$truth, estimate = test_results_weather$.pred)
+rsq_all <- rsq(test_results_all, truth = test_results_all$truth, estimate = test_results_all$.pred)
+
+rmse_weather <- rmse(test_results_weather, truth = test_results_weather$truth, estimate = test_results_weather$.pred)
+rmse_all <- rmse(test_results_all, truth = test_results_all$truth, estimate = test_results_all$.pred)
+
+
+## all variables model has rsq and rmse better
+## Next step is to check what variables influence the most in the results
+bike_rent_model_all_fit$fit$fit$fit$coefficients
+
+sort_coefi <-abs(bike_rent_model_all_fit$fit$fit$fit$coefficients)
+
+sort_coefi
+
+df <- tibble(VAR = names(sort_coefi), coefs = unname(sort_coefi) )
+
+p1 = ggplot(df, aes(x = reorder(VAR,coefs), y = coefs)) +
+        geom_bar(stat='identity') +
+        coord_flip()
+            
+
+
+p1
+
+bike
+
+
+# LAB: Refine the Baseline Regression Models (120 mins):
+#         
+#         TASK: Add higher order terms
+# TASK: Add interaction terms
+# TASK: Add regularization
+# TASK: Experiment to find the best performed model
+
+
+
