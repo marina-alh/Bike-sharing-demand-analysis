@@ -673,23 +673,52 @@ sort_coefi <-abs(bike_rent_model_all_fit$fit$fit$fit$coefficients)
 
 sort_coefi
 
-df <- tibble(VAR = names(sort_coefi), coefs = unname(sort_coefi) )
+df <- tibble(VAR = names(sort_coefi), coefs = unname(sort_coefi))
+
+df = na.omit(df)
 
 p1 = ggplot(df, aes(x = reorder(VAR,coefs), y = coefs)) +
         geom_bar(stat='identity') +
-        coord_flip()
+        coord_flip()+
+        xlab("Variables")+
+        ylab("Coefficients")+
+        labs(title = "Top-ranked variables by coeficient")
             
 
 
 p1
 
-bike
 
 
-# LAB: Refine the Baseline Regression Models (120 mins):
-#         
-#         TASK: Add higher order terms
+# LAB: Refine the Baseline Regression Models:
+
+# TASK: Add higher order terms
+
+bike_sharing_df <- read.csv("data//seoul_bike_sharing_converted_normalized.csv")
+
+bike_sharing_df <- bike_sharing_df %>% 
+        select(-DATE, -FUNCTIONING_DAY)
+
+
+set.seed(1234)
+data_split <- initial_split(bike_sharing_df, prop = 4/5)
+train_data <- training(data_split)
+test_data <- testing(data_split)
+
 # TASK: Add interaction terms
+
+# plot to verify that the correlation between RENTED BIKE COUNT and TEMPERATURE does not look linear
+ggplot(data = train_data, aes(RENTED_BIKE_COUNT, TEMPERATURE)) + 
+        geom_point() 
+
+# Plot the higher order polynomial fits
+ggplot(data=train_data, aes(RENTED_BIKE_COUNT, TEMPERATURE)) + 
+        geom_point() + 
+        geom_smooth(method = "lm", formula = y ~ x, color="red") + 
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color="yellow") + 
+        geom_smooth(method = "lm", formula = y ~ poly(x, 4), color="green") + 
+        geom_smooth(method = "lm", formula = y ~ poly(x, 6), color="blue")
+
 # TASK: Add regularization
 # TASK: Experiment to find the best performed model
 
