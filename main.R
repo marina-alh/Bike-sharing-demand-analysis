@@ -264,7 +264,7 @@ sub_bike_sharing_df %>%
         filter(find_reference_pattern(CITY)) %>%
         slice(0:10)
 
-# Check whether the System column has any reference links
+# Check whethe!♥r the System column has any reference links
 sub_bike_sharing_df %>% 
         select(SYSTEM) %>% 
         filter(find_reference_pattern(SYSTEM)) %>%
@@ -699,6 +699,10 @@ bike_sharing_df <- read.csv("data//seoul_bike_sharing_converted_normalized.csv")
 bike_sharing_df <- bike_sharing_df %>% 
         select(-DATE, -FUNCTIONING_DAY)
 
+lm_spec <- linear_reg() %>%
+        set_engine("lm") %>% 
+        set_mode("regression")
+
 
 set.seed(1234)
 data_split <- initial_split(bike_sharing_df, prop = 4/5)
@@ -718,6 +722,29 @@ ggplot(data=train_data, aes(RENTED_BIKE_COUNT, TEMPERATURE)) +
         geom_smooth(method = "lm", formula = y ~ poly(x, 2), color="yellow") + 
         geom_smooth(method = "lm", formula = y ~ poly(x, 4), color="green") + 
         geom_smooth(method = "lm", formula = y ~ poly(x, 6), color="blue")
+
+# Fit a linear model with higher order polynomial on some important variables 
+
+# #HINT: Use poly function to build polynomial terms, lm_poly <- RENTED_BIKE_COUNT ~ poly(TEMPERATURE, 6) + poly(HUMIDITY, 4) .....
+
+lm_poly <- lm(RENTED_BIKE_COUNT ~ poly(TEMPERATURE, 6) + poly(HUMIDITY, 4),
+                  data = train_data)
+
+summary(lm_poly$fit)
+
+lm_fit <- fit(lm_poly, train_data)
+
+test_results = data.frame()
+        
+
+test_results <- predict(lm_poly, new_data = test_data) %>% 
+        mutate(.truth = test_data$RENTED_BIKE_COUNT) 
+
+# it is not possible to have negative bike counts so:
+test_results[test_results<0] <- 0
+
+rsq_lm_poly <- rsq(test_results, truth = .truth, estimate = .estimate)
+rmse_lm_poly<- rmse(test_results, truth = .truth, estimate = .estimate)
 
 # TASK: Add regularization
 # TASK: Experiment to find the best performed model
