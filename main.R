@@ -727,26 +727,55 @@ ggplot(data=train_data, aes(RENTED_BIKE_COUNT, TEMPERATURE)) +
 
 # #HINT: Use poly function to build polynomial terms, lm_poly <- RENTED_BIKE_COUNT ~ poly(TEMPERATURE, 6) + poly(HUMIDITY, 4) .....
 
-lm_poly <- lm(RENTED_BIKE_COUNT ~ poly(TEMPERATURE, 6) + poly(HUMIDITY, 4),
+lm_poly <- lm(RENTED_BIKE_COUNT ~ poly(TEMPERATURE, 6) + poly(HUMIDITY, 6)+., 
                   data = train_data)
 
 summary(lm_poly$fit)
 
-lm_fit <- fit(lm_poly, train_data)
 
-test_results = data.frame()
-        
+test_results = data.frame(.estimate = (predict(lm_poly, newdata = test_data)))
 
-test_results <- predict(lm_poly, new_data = test_data) %>% 
-        mutate(.truth = test_data$RENTED_BIKE_COUNT) 
 
 # it is not possible to have negative bike counts so:
 test_results[test_results<0] <- 0
 
+test_results = test_results %>% 
+        mutate(.truth = test_data$RENTED_BIKE_COUNT)
+
 rsq_lm_poly <- rsq(test_results, truth = .truth, estimate = .estimate)
 rmse_lm_poly<- rmse(test_results, truth = .truth, estimate = .estimate)
 
+
+
+# Add interaction terms to the poly regression built in previous step
+
+# HINT: You could use `*` operator to create interaction terms such as HUMIDITY*TEMPERATURE and make the formula look like:
+# RENTED_BIKE_COUNT ~ RAINFALL*HUMIDITY ...
+
+lm_poly_int <- lm(RENTED_BIKE_COUNT ~ poly(TEMPERATURE, 6) + poly(HUMIDITY, 6)+ (RAINFALL * HUMIDITY), 
+              data = train_data)
+
+
+summary(lm_poly_int$fit)
+
+test_results_int = data.frame(.estimate = (predict(lm_poly_int, newdata = test_data)))
+
+
+test_results_int[test_results_int<0] <- 0
+
+test_results_int = test_results_int %>% 
+        mutate(.truth = test_data$RENTED_BIKE_COUNT)
+
+
+rsq_lm_poly_int <- rsq(test_results, truth = .truth, estimate = .estimate)
+rmse_lm_poly_int <- rmse(test_results, truth = .truth, estimate = .estimate)
+
 # TASK: Add regularization
+
+
+
+
+
 # TASK: Experiment to find the best performed model
 
 
