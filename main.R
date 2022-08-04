@@ -844,11 +844,30 @@ lambda_grid <- grid_regular(levels = 50,
 
 bike_cvfolds <- vfold_cv(train_data)
 
-ridge_grid <- tune_grid(tune_spec,RENTED_BIKE_COUNT ~ poly(TEMPERATURE, 6) + poly(HUMIDITY, 4)+(RAINFALL * HUMIDITY)+.,
+lasso_grid <- tune_grid(tune_spec,RENTED_BIKE_COUNT ~ poly(TEMPERATURE, 6) + poly(HUMIDITY, 4)+(RAINFALL * HUMIDITY)+.,
                         resamples = bike_cvfolds, grid = lambda_grid)
 
-show_best(ridge_grid, metric = "rsq")
+show_best(lasso_grid, metric = "rsq")
+
+
+lasso_grid %>%
+        collect_metrics() %>%
+        filter(.metric == "rsq") %>%
+        ggplot(aes(penalty, mean)) +
+        geom_line(size=1, color="red") +
+        scale_x_log10() +
+        ggtitle("RSQ")
+
+
+
+
 # TASK: Experiment to find the best performed model
+
+
+
+test_results_glmnet %>%  ggplot() +
+        stat_qq(aes(sample=.truth), color='green') +
+        stat_qq(aes(sample=.pred), color='red')
 
 
 
