@@ -571,9 +571,9 @@ set.seed(1234)
 # prop = 3/4
 bike_sharing_df_split <- initial_split(bike_sharing_df, prop = 3/4)
 # train_data 
-train_df <- training(bike_sharing_df_split)
+train_data <- training(bike_sharing_df_split)
 # test_data
-test_df <- testing(bike_sharing_df_split)
+test_data <- testing(bike_sharing_df_split)
 
 
 # TASK: Build a linear regression model using only the weather variables
@@ -588,50 +588,41 @@ test_df <- testing(bike_sharing_df_split)
 # SNOWFALL - cm
 
 
-lm_model_weather <- linear_reg(mode = "regression", engine = "lm") 
+lm_model_weather <- linear_reg() %>% 
+                        set_engine(engine = "lm") %>% 
+                        set_mode(mode = "regression")
         
 
 # Fit the model called `lm_model_weather`
 # RENTED_BIKE_COUNT ~ TEMPERATURE + HUMIDITY + WIND_SPEED + VISIBILITY + DEW_POINT_TEMPERATURE + SOLAR_RADIATION + RAINFALL + SNOWFALL,  with the training data
 
-weather_var_rec <- recipe(RENTED_BIKE_COUNT ~ TEMPERATURE + HUMIDITY + WIND_SPEED + VISIBILITY + DEW_POINT_TEMPERATURE + SOLAR_RADIATION + RAINFALL + SNOWFALL,
-                   data = train_df)
+train_fit <- lm_model_weather %>% 
+                fit(RENTED_BIKE_COUNT ~ TEMPERATURE + HUMIDITY + WIND_SPEED + VISIBILITY + DEW_POINT_TEMPERATURE + SOLAR_RADIATION + RAINFALL + SNOWFALL,
+                    data = train_data)
 
-bike_rent_model_weather_wflow <- 
-        workflow() %>% 
-        add_model(lm_model_weather) %>% 
-        add_recipe(weather_var_rec)
-
-
-bike_rent_model_weather_fit <-
-        fit(bike_rent_model_weather_wflow,
-            data = train_df)
+train_results <- train_fit %>% 
+        # Make the predictions and save predicted values
+        predict(new_data = train_data) %>% 
+        # Create a new column to sabe the true values
+        mutate(.truth = train_data$RENTED_BIKE_COUNT)
 
 
-# fit summary
-
-bike_rent_model_weather_fit$fit
 
 
 # TASK: Build a linear regression model using both weather and date/time variables
 
 
-lm_model_all <- linear_reg(mode = "regression", engine = "lm")
+lm_model_all <- linear_reg() %>% 
+        set_engine(engine = "lm") %>% 
+        set_mode(mode = "regression")
 
-all_var_rec <- recipe(RENTED_BIKE_COUNT ~.,
-                          data = train_df)
-
-
-bike_rent_model_all_wflow <- 
-        workflow() %>% 
-        add_model(lm_model_all) %>% 
-        add_recipe(all_var_rec)
-
-bike_rent_model_all_fit <-
-        fit(bike_rent_model_all_wflow,
-            data = train_df)
-
-bike_rent_model_all_fit$fit
+train_fit_all <- lm_model_all %>% 
+                fit(RENTED_BIKE_COUNT ~ .,
+                    data = train_data)
+        
+train_results_all <- train_fit_all %>% 
+                predict(new_data = train_data) %>% 
+                mutate(.truth = train_data$RENTED_BIKE_COUNT)
 
 
 # TASK: Evaluate the models and identify important variables
@@ -645,31 +636,68 @@ bike_rent_model_all_fit$fit
 
 # test_results_weather for lm_model_weather model
 
-test_results_weather <- predict(bike_rent_model_weather_fit, new_data = test_df) %>% 
-        mutate(truth = test_df$RENTED_BIKE_COUNT)
+# Testing the model
+
+test_results <- train_fit %>% 
+        # Make the predictions and saber the predicted values
+        predict(new_data = test_data) %>% 
+        # Create a new column to sabe the trie values
+        mutate(.truth = test_data$RENTED_BIKE_COUNT)
 
 
 
 # test_results_all for lm_model_all
 
-test_results_all <- predict(bike_rent_model_all_fit, new_data = test_df)%>% 
-        mutate(truth = test_df$RENTED_BIKE_COUNT)
+
+test_results_all <- train_fit_all %>% 
+        predict(new_data = test_data) %>% 
+        mutate(.truth = test_data$RENTED_BIKE_COUNT)
 
 
 
 #Calculating metrics 
-rsq_weather <- rsq(test_results_weather, truth = test_results_weather$truth, estimate = test_results_weather$.pred)
-rsq_all <- rsq(test_results_all, truth = test_results_all$truth, estimate = test_results_all$.pred)
+rsq_weather_train <- rsq(train_results, truth = .truth,
+                   estimate = .pred)
+rsq_weather_test <- rsq(test_results, truth = .truth,
+                        estimate = .pred)
 
-rmse_weather <- rmse(test_results_weather, truth = test_results_weather$truth, estimate = test_results_weather$.pred)
-rmse_all <- rmse(test_results_all, truth = test_results_all$truth, estimate = test_results_all$.pred)
 
+
+rsq_all_train <- rsq(train_results_all, truth = .truth,
+                estimate = .pred)
+rsq_all_test <- rsq(test_results_all, truth = .truth,
+                estimate = .pred)
+
+
+
+rmse_weather_train <- rmse(train_results, truth = .truth,
+                     estimate = .pred)
+rmse_weather_test <- rmse(test_results, truth = .truth,
+                     estimate = .pred)
+
+rmse_all_train <- rmse(train_results_all, truth = .truth,
+                     estimate = .pred)
+rmse_all_test <- rmse(test_results_all, truth = .truth,
+                     estimate = .pred)
+
+# Plot to visualize how all the model predicts RENTED BIKE COUNT
+test_results_all %>%
+        mutate(train = "testing") %>%
+        bind_rows(train_results_all %>% mutate(train = "training")) %>%
+        ggplot(aes(.truth, .pred)) +
+        geom_abline(lty = 2, color = "orange", 
+                    size = 1.5) +
+        geom_point(color = '#006EA1', 
+                   alpha = 0.5) +
+        facet_wrap(~train) +
+        labs(x = "Truth", 
+             y = "Rented bike count - All Variables")
 
 ## all variables model has rsq and rmse better
-## Next step is to check what variables influence the most in the results
-bike_rent_model_all_fit$fit$fit$fit$coefficients
 
-sort_coefi <-abs(bike_rent_model_all_fit$fit$fit$fit$coefficients)
+## Next step is to check what variables influence the most in the results
+
+sort_coefi <-abs(train_fit_all$fit$coefficients)
 
 sort_coefi
 
@@ -684,7 +712,7 @@ p1 = ggplot(df, aes(x = reorder(VAR,coefs), y = coefs)) +
         ylab("Coefficients")+
         labs(title = "Top-ranked variables by coeficient")
             
-
+# Top-ranked variables by coefficient
 
 p1
 
@@ -693,6 +721,9 @@ p1
 # LAB: Refine the Baseline Regression Models:
 
 # TASK: Add higher order terms
+library("tidymodels")
+library("tidyverse")
+library("stringr")
 
 bike_sharing_df <- read.csv("data//seoul_bike_sharing_converted_normalized.csv")
 
@@ -727,23 +758,25 @@ ggplot(data=train_data, aes(RENTED_BIKE_COUNT, TEMPERATURE)) +
 
 # #HINT: Use poly function to build polynomial terms, lm_poly <- RENTED_BIKE_COUNT ~ poly(TEMPERATURE, 6) + poly(HUMIDITY, 4) .....
 
-lm_poly <- lm(RENTED_BIKE_COUNT ~ poly(TEMPERATURE, 6) + poly(HUMIDITY, 6)+., 
+lm_poly_fit <- lm_spec %>% 
+        fit(RENTED_BIKE_COUNT ~ poly(TEMPERATURE, 6) + poly(HUMIDITY, 4)+., 
                   data = train_data)
 
-summary(lm_poly$fit)
+summary(lm_poly_fit$fit)
 
 
-test_results = data.frame(.estimate = (predict(lm_poly, newdata = test_data)))
+test_results_poly_fit = lm_poly_fit %>% 
+                predict(new_data = test_data) %>% 
+                mutate(.truth = test_data$RENTED_BIKE_COUNT)
 
 
 # it is not possible to have negative bike counts so:
-test_results[test_results<0] <- 0
+test_results_poly_fit[test_results_poly_fit<0] <- 0
 
-test_results = test_results %>% 
-        mutate(.truth = test_data$RENTED_BIKE_COUNT)
 
-rsq_lm_poly <- rsq(test_results, truth = .truth, estimate = .estimate)
-rmse_lm_poly<- rmse(test_results, truth = .truth, estimate = .estimate)
+
+rsq_lm_poly <- rsq(test_results_poly_fit, truth = .truth, estimate = .pred)
+rmse_lm_poly<- rmse(test_results_poly_fit, truth = .truth, estimate = .pred)
 
 
 
@@ -752,30 +785,69 @@ rmse_lm_poly<- rmse(test_results, truth = .truth, estimate = .estimate)
 # HINT: You could use `*` operator to create interaction terms such as HUMIDITY*TEMPERATURE and make the formula look like:
 # RENTED_BIKE_COUNT ~ RAINFALL*HUMIDITY ...
 
-lm_poly_int <- lm(RENTED_BIKE_COUNT ~ poly(TEMPERATURE, 6) + poly(HUMIDITY, 6)+ (RAINFALL * HUMIDITY), 
+lm_poly_int_fit <- lm_spec %>% 
+                fit(RENTED_BIKE_COUNT ~ poly(TEMPERATURE, 6) + poly(HUMIDITY, 4)+(RAINFALL * HUMIDITY)+., 
               data = train_data)
 
 
-summary(lm_poly_int$fit)
+summary(lm_poly_int_fit$fit)
 
-test_results_int = data.frame(.estimate = (predict(lm_poly_int, newdata = test_data)))
+test_results_int = lm_poly_int_fit %>% 
+                        predict(new_data = test_data) %>% 
+                        mutate(.truth = test_data$RENTED_BIKE_COUNT)
 
 
 test_results_int[test_results_int<0] <- 0
 
-test_results_int = test_results_int %>% 
-        mutate(.truth = test_data$RENTED_BIKE_COUNT)
 
-
-rsq_lm_poly_int <- rsq(test_results, truth = .truth, estimate = .estimate)
-rmse_lm_poly_int <- rmse(test_results, truth = .truth, estimate = .estimate)
+rsq_lm_poly_int <- rsq(test_results_int, truth = .truth, estimate = .pred)
+rmse_lm_poly_int <- rmse(test_results_int, truth = .truth, estimate = .pred)
 
 # TASK: Add regularization
 
+# HINT: Use linear_reg() function with two parameters: penalty and mixture
+# - penalty controls the intensity of model regularization
+# - mixture controls the trade off between L1 and L2 regularization
+# L1 - 1 lasso reduce number of features
+# L2 - 0 Ridge don't reduce number of features
+
+
+linreg_reg_spec <- 
+        linear_reg(penalty = 0.001, mixture = 1) %>% 
+        set_engine("glmnet")
+
+lm_glmnet <- linreg_reg_spec %>% 
+        fit(RENTED_BIKE_COUNT ~ poly(TEMPERATURE, 6) + poly(HUMIDITY, 4)+(RAINFALL * HUMIDITY)+., 
+        data = train_data)
+
+test_results_glmnet <- lm_glmnet %>% 
+                predict(new_data = test_data) %>% 
+                mutate(.truth = test_data$RENTED_BIKE_COUNT)
+
+
+
+        
+        
+rsq_lm_poly_glmnet <- rsq(test_results_glmnet, truth = .truth, estimate = .pred)
+rmse_lm_poly_glmnet <- rmse(test_results_glmnet, truth = .truth, estimate = .pred)
+
+# You could manually try different parameter combinations or use grid search to find optimal combinations
 
 
 
 
+tune_spec <- linear_reg(penalty = tune(), mixture = 1) %>% 
+        set_engine("glmnet")
+
+lambda_grid <- grid_regular(levels = 50,
+                            penalty(range = c(-3,0.3)))
+
+bike_cvfolds <- vfold_cv(train_data)
+
+ridge_grid <- tune_grid(tune_spec,RENTED_BIKE_COUNT ~ poly(TEMPERATURE, 6) + poly(HUMIDITY, 4)+(RAINFALL * HUMIDITY)+.,
+                        resamples = bike_cvfolds, grid = lambda_grid)
+
+show_best(ridge_grid, metric = "rsq")
 # TASK: Experiment to find the best performed model
 
 
