@@ -43,9 +43,9 @@ TASK 2: Data Wrangling
 TASK 3: EDA with tidyverse and ggpl2
 
 
-TASK 4: Disigning a model for prediction o Rented Bikes
+TASK 4: Designing a model for prediction o Rented Bikes
 
-4.1:Predict Hourly Rented Bike Count using Basic Linear Regression Models
+4.1 Predict Hourly Rented Bike Count using Basic Linear Regression Models
 
         Split data into training and testing datasets
         Build a linear regression model using only the weather variables
@@ -54,13 +54,12 @@ TASK 4: Disigning a model for prediction o Rented Bikes
         Refine the Baseline Regression Models (120 mins):
 
 
-4.2:Refine the Baseline Regression Models
-        #Add higher order terms
-        Add interaction terms
-        Add regularization
-        Experiment to find the best performed model
-
-
+4.2 Refine the Baseline Regression Models
+      
+       Add higher order terms
+       Add interection terms
+       Add regularization
+       
 
 
 
