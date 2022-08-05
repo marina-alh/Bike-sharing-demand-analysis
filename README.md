@@ -47,18 +47,18 @@ TASK 4: Designing a model for prediction o Rented Bikes
 
 4.1 Predict Hourly Rented Bike Count using Basic Linear Regression Models
 
-        Split data into training and testing datasets
-        Build a linear regression model using only the weather variables
-        Build a linear regression model using both weather and date/time variables
-        Evaluate the models and identify important variables
-        Refine the Baseline Regression Models (120 mins):
+        TASK: Split data into training and testing datasets
+        TASK: Build a linear regression model using only the weather variables
+        TASK: Build a linear regression model using both weather and date/time variables
+        TASK: Evaluate the models and identify important variables
+        TASK: Refine the Baseline Regression Models (120 mins):
 
 
 4.2 Refine the Baseline Regression Models
       
-       Add higher order terms
-       Add interection terms
-       Add regularization
+       TASK: Add higher order terms
+       TASK: Add interection terms
+       TASK: Add regularization
        
 
 
