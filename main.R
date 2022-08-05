@@ -1,92 +1,93 @@
-# library(tidyverse) 
 
 
-# Check if need to install rvest` library
-# require(rvest)
-# 
-# url <- "https://en.wikipedia.org/wiki/List_of_bicycle-sharing_systems"
-# 
-# 
-# #making GET request andparse website into xml document
-# root_node <- read_html(url)
-# 
-# 
-# table_nodes <- html_elements(root_node, "table")
-# 
-# df <- html_table(table_nodes[[2]])
-# 
-# write.csv(df ,"data\\raw_bike_sharing_systems.csv")
+
+
+# call requiered packets 
+
+
+library(tidyverse) 
+library(rvest)
+library(httr)
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++
+# WEBSCRAPING from Wikipedia
+
+url <- "https://en.wikipedia.org/wiki/List_of_bicycle-sharing_systems"
+
+#making GET request and parse website into xml document
+root_node <- read_html(url)
+
+
+table_nodes <- html_elements(root_node, "table")
+
+df <- html_table(table_nodes[[2]])
+
+write.csv(df ,"data\\raw_bike_sharing_systems.csv")
 
 #+++++++++++++++++++++++++++++++++++++++++++#
 
-
-
-# Check if need to install rvest` library
-require("httr")
-
-library(httr)
+# Getting data from open weather with API and JASON
 
 # URL for Current Weather API
-# current_weather_url <- 'https://api.openweathermap.org/data/2.5/weather'
-# 
-# 
-# 
-# # need to be replaced by your real API key
-# your_api_key <- "e4614d8005296e56cff6675eefd7f6df"
-# # Input `q` is the city name
-# # Input `appid` is your API KEY, 
-# # Input `units` are preferred units such as Metric or Imperial
-# current_query <- list(q = "Seoul", appid = your_api_key, units="metric")
-# 
-# response <- GET(current_weather_url, query=current_query)
-# 
-# http_type(response)
-# 
-# json_result <- content(response, as="parsed")
-# 
-# 
-# 
-# # Create some empty vectors to hold data temporarily
-# weather <- c()
-# visibility <- c()
-# temp <- c()
-# temp_min <- c()
-# temp_max <- c()
-# pressure <- c()
-# humidity <- c()
-# wind_speed <- c()
-# wind_deg <- c()
+current_weather_url <- 'https://api.openweathermap.org/data/2.5/weather'
 
-# 
-# # $weather is also a list with one element, its $main element indicates the weather status such as clear or rain
-# weather <- c(weather, json_result$weather[[1]]$main)
-# # Get Visibility
-# visibility <- c(visibility, json_result$visibility)
-# # Get current temperature 
-# temp <- c(temp, json_result$main$temp)
-# # Get min temperature 
-# temp_min <- c(temp_min, json_result$main$temp_min)
-# # Get max temperature 
-# temp_max <- c(temp_max, json_result$main$temp_max)
-# # Get pressure
-# pressure <- c(pressure, json_result$main$pressure)
-# # Get humidity
-# humidity <- c(humidity, json_result$main$humidity)
-# # Get wind speed
-# wind_speed <- c(wind_speed, json_result$wind$speed)
-# # Get wind direction
-# wind_deg <- c(wind_deg, json_result$wind$deg)
-# 
-# 
-# weather_data_frame <- data.frame(weather=weather, 
-#                                  visibility=visibility, 
-#                                  temp=temp, 
-#                                  temp_min=temp_min, 
-#                                  temp_max=temp_max, 
-#                                  pressure=pressure, 
-#                                  humidity=humidity, 
-#                                  wind_speed=wind_speed, 
-#                                  wind_deg=wind_deg)
+
+
+your_api_key <- "e4614d8005296e56cff6675eefd7f6df"
+# Input `q` is the city name
+# Input `appid` is your API KEY,
+# Input `units` are preferred units such as Metric or Imperial
+current_query <- list(q = "Seoul", appid = your_api_key, units="metric")
+
+response <- GET(current_weather_url, query=current_query)
+
+http_type(response)
+
+json_result <- content(response, as="parsed")
+
+
+
+# Create some empty vectors to hold data temporarily
+weather <- c()
+visibility <- c()
+temp <- c()
+temp_min <- c()
+temp_max <- c()
+pressure <- c()
+humidity <- c()
+wind_speed <- c()
+wind_deg <- c()
+
+
+# $weather is also a list with one element, its $main element indicates the weather status such as clear or rain
+weather <- c(weather, json_result$weather[[1]]$main)
+# Get Visibility
+visibility <- c(visibility, json_result$visibility)
+# Get current temperature
+temp <- c(temp, json_result$main$temp)
+# Get min temperature
+temp_min <- c(temp_min, json_result$main$temp_min)
+# Get max temperature
+temp_max <- c(temp_max, json_result$main$temp_max)
+# Get pressure
+pressure <- c(pressure, json_result$main$pressure)
+# Get humidity
+humidity <- c(humidity, json_result$main$humidity)
+# Get wind speed
+wind_speed <- c(wind_speed, json_result$wind$speed)
+# Get wind direction
+wind_deg <- c(wind_deg, json_result$wind$deg)
+
+
+weather_data_frame <- data.frame(weather=weather,
+                                 visibility=visibility,
+                                 temp=temp,
+                                 temp_min=temp_min,
+                                 temp_max=temp_max,
+                                 pressure=pressure,
+                                 humidity=humidity,
+                                 wind_speed=wind_speed,
+                                 wind_deg=wind_deg)
 
 
 # Create some empty vectors to hold data temporarily
@@ -160,17 +161,18 @@ get_weather_forecaset_by_cities <- function(city_names){
 }
 
 
-# debug(get_weather_forecaset_by_cities)
 
 
 
 cities_weather_df <- get_weather_forecaset_by_cities(cities)
 
-# undebug(get_weather_forecaset_by_cities)
+# Writing csv File 
 
 write.csv(cities_weather_df, "data\\cities_weather_forecast.csv", row.names=FALSE)
 
-
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#+
+#+ DOWNLOADING CSV FILE FROM URL
 
 # Download some general city information such as name and locations
 url <- "https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMDeveloperSkillsNetwork-RP0321EN-SkillsNetwork/labs/datasets/raw_worldcities.csv"
@@ -188,7 +190,16 @@ download.file(url, destfile = "data\\raw_seoul_bike_sharing.csv")
 
 ds_list <- c('raw_bike_sharing_systems.csv', 'raw_seoul_bike_sharing.csv', 'raw_cities_weather_forecast.csv', 'raw_worldcities.csv')
 
-foo <- function(dataset_list){
+
+
+# Tidy_files:
+# input <- dataset file name
+# Converts all columns names of the file to uppercase
+# Replace any white space separators by underscores, using the str_replace_all function
+# Saves the new csv file
+# output -> 0
+
+tidy_files <- function(dataset_list){
         
         
         for (dataset_name in dataset_list){
@@ -211,17 +222,18 @@ foo <- function(dataset_list){
 
 }
 
-# debug(foo)
 
-foo(ds_list)
+tidy_files(ds_list)
 
-# undebug(foo)
-
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#+ Removing reference links and numeric values
+#+
+#+
 # First load the dataset
 bike_sharing_df <- read.csv("data\\raw_bike_sharing_systems.csv")
 
 
-# In this project, let's only focus on processing the following revelant columns (feel free to process the other columns for more practice):
+# In this project, let's only focus on processing the following relevant columns:
 # 
 #     COUNTRY: Country name
 #     CITY: City name
@@ -331,7 +343,18 @@ write.csv(sub_bike_sharing_df,paste('data\\',"bike_sharing_systems.csv",sep=''),
 
 
 
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++##
+
+
+
+
+
+
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Data wrangling part 2:
+
+
+# Detecting and handling missing values with dplyr
 
 bike_sharing_df <- read.csv("data//raw_seoul_bike_sharing.csv")
 
@@ -398,6 +421,9 @@ write.csv(bike_sharing_df, "data\\seoul_bike_sharing_converted.csv", row.names=F
 
 
 
+
+#++++ Normalazing data
+
 # Use the `mutate()` function to apply min-max normalization on columns 
 
 
@@ -450,7 +476,16 @@ for (dataset_name in dataset_list){
 }
 
 
+
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#+
+#+
 #Exploratory Data Analysis with tidyverse and ggplot2
+#+
+#+
+
+
 
 
 
@@ -546,7 +581,7 @@ sum(aux$TOTAL_SNOWFALL != 0)
 
 # HOURLY BIKE SHARING COUNT
 
-# Predict Hourly Rented Bike Count using Basic Linear Regression Models (90 mins):
+# Predict Hourly Rented Bike Count using Basic Linear Regression Models:
 #         
 # TASK: Split data into training and testing data sets
 
@@ -865,7 +900,7 @@ lasso_grid %>%
 
 
 
-test_results_glmnet %>%  ggplot() +
+test_results_int %>%  ggplot() +
         stat_qq(aes(sample=.truth), color='green') +
         stat_qq(aes(sample=.pred), color='red')
 
