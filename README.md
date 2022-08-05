@@ -55,8 +55,17 @@ TASK 4: Disigning a model for prediction o Rented Bikes
 
 
 4.2:Refine the Baseline Regression Models
-        Add higher order terms
+        #Add higher order terms
         Add interaction terms
         Add regularization
         Experiment to find the best performed model
+
+
+
+
+
+
+
+
+
         
