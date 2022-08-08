@@ -667,7 +667,7 @@ train_results_all <- train_fit_all %>%
 # 2. Root Mean Squared Error (RMSE)
 
 # Use predict() function to generate test results for `lm_model_weather` and `lm_model_all`
-# and generate two test results dataframe with a truth column:
+# and generate two test results data frame with a truth column:
 
 # test_results_weather for lm_model_weather model
 
