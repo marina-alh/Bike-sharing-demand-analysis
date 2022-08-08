@@ -63,6 +63,15 @@ TASK 4: Designing a model for prediction o Rented Bikes
 
 
 
+#################################
+
+
+Shiny app
+
+
+
+    TASK: Add a basic max bike prediction overview map
+    TASK: Add a select input (dropdown) to select a specific city
 
 
 
