@@ -12,7 +12,7 @@ source("model_prediction.R")
 
 
 
-test_weather_data_generation<-function(){
+test_weather_data_generation <- function(){
   generate_city_weather_bike_data() 
   city_weather_bike_df<-generate_city_weather_bike_data()
   stopifnot(length(city_weather_bike_df)>0)
@@ -31,12 +31,25 @@ shinyServer(function(input, output){
   
   # Create another data frame called `cities_max_bike` with each row contains city location info and max bike
   # prediction for the city
-city_weather_bike_df%>% 
-                group_by(CITY_ASCII) %>% 
+  cities_max_bike <- city_weather_bike_df %>% 
+                group_by(CITY = CITY_ASCII) %>% 
+                summarise(MAX_BIKE_SALES = max(BIKE_PREDICTION))
                 
   # Observe drop-down event
   
   # Then render output plots with an id defined in ui.R
+  
+  output$city_bike_map <- renderLeaflet({
+          # Complete this function to render a leaflet map
+          m <- leaflet() %>%
+                  # leaflet works with the pipe operator
+                  addTiles() %>%
+                  # setup the default OpenStreetMap map tiles
+                  addCircleMarkers (lng = 174.768, lat = -36.852, popup = "The birthplace of R")
+                # add a single point layer
+          m
+                  
+  })
   
   # If All was selected from dropdown, then render a leaflet map with circle markers
   # and popup weather LABEL for all five cities

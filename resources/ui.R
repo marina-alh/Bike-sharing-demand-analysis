@@ -11,7 +11,7 @@ shinyUI(
     # Create a main panel to show cities on a leaflet map
     mainPanel(
       # leaflet output with id = 'city_bike_map', height = 1000
-           # leafletOutput(id = "city_bike_map", height = 1000)
+           leafletOutput(outputId = "city_bike_map", height = 1000)
     ),
     # Create a side bar to show detailed plots for a city
     sidebarPanel(
